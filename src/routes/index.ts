@@ -1,8 +1,8 @@
 import express from 'express';
-import { testFunction } from '../controllers/test.controller';
+import { login } from '../controllers/session.controller';
 
 const router = express.Router();
 
-router.use('/test', testFunction)
+router.use('/session/login', login)
 
 export default router;
