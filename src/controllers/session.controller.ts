@@ -27,7 +27,10 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
                 user: user
             }))
             .then(token => {
-                res.send(token);
+                res.send({
+                    "token": token.token,
+                    "created": token.created
+                });
             });
         })
     });
