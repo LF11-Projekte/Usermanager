@@ -21,7 +21,7 @@
   "version": "1.0.0",
   "main": "src/index.ts",
   "scripts": {
-    "dev": "nodemon src/index.ts",
+    "dev": "nodemon src/app.ts",
     "build": "rm -rf out/ && prettier --write src/ && tsc"
   },
   "author": "",
