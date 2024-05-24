@@ -1,7 +1,7 @@
 import http from 'http';
 import express, { Express } from 'express';
 import morgan from 'morgan';
-import routes from './routes/index';
+import routes from './routes';
 
 import cookieParser from "cookie-parser";
 import session from "express-session";
@@ -24,11 +24,9 @@ AppDataSource.initialize().then(async () => {
     
     /** RULES OF OUR API*/
     app.use((req, res, next) => {
-        // set the CORS policy
         res.header('Access-Control-Allow-Origin', '*');
-        // set the CORS headers
         res.header('Access-Control-Allow-Headers', 'origin, X-Requested-With, Content-Type, Accept, Authorization')
-        // set the CORS method headers
+
         if (req.method == 'OPTIONS') {
             res.header('Access-Control-Allow-Methods', 'GET PATCH DELETE POST PUT');
             return res.status(200).json({});
@@ -40,12 +38,12 @@ AppDataSource.initialize().then(async () => {
     app.use('/', routes);
     
     /** Error handling */
-    app.use((req, res, next) => {
-        const error = new Error('not found');
-        return res.status(404).json({
-            message: error.message
-        });
-    });
+    // app.use((req, res, next) => {
+    //     const error = new Error('not found');
+    //     return res.status(404).json({
+    //         message: error.message
+    //     });
+    // });
     
     /** Server */
     const httpServer = http.createServer(app);
