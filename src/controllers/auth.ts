@@ -9,14 +9,18 @@ import ldap from 'ldapjs';
 const userRepo = AppDataSource.getRepository(User);
 const tokenRepo = AppDataSource.getRepository(Token);
 const ldapClient = ldap.createClient({url: LDAP_URLs});
+ldapClient.on("connect", () => console.log("connection to ldap established"));
+ldapClient.on("connectError", (err) => console.log(err));
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
     
     const { redirect, user, password } = req.body;
 
-    let success = ldapClient.bind(`cn=${user},cn=Users,dc=ulfx,dc=local`, password, function(err) {
-        return err ? false : true;
-    });
+    let success = await new Promise((resolve) => {
+        ldapClient.bind(`cn=${user},cn=Users,dc=ulfx,dc=local`, password, function(err) {
+            resolve(err === null);
+        });
+    })
 
     if (!success) {
         res.send(401);
