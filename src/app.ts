@@ -7,6 +7,7 @@ import cookieParser from "cookie-parser";
 import session from "express-session";
 
 import { AppDataSource } from "./data-source"
+import { verifyToken } from './controllers/auth';
 
 AppDataSource.initialize().then(async () => {
     const app: Express = express();
@@ -33,6 +34,8 @@ AppDataSource.initialize().then(async () => {
         }
         next();
     });
+
+    app.use(verifyToken);
     
     /** Routes */
     app.use('/', routes);

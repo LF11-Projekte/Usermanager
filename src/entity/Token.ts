@@ -18,11 +18,12 @@ export class Token {
     user: User
 
     @Column()
-    expire: number = new Date().getTime() + 1000*60*60 // 1 h
+    expire: number
 
     public constructor(init?:Partial<Token>) {
         Object.assign(this, init);
         this.accessToken = randomUUID();
         this.refreshToken = randomUUID();
+        this.expire = new Date().getTime() + 1000*60*60; // 1 h
     }
 }
