@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { AppDataSource } from "../data-source";
 import { User } from '../entity/User';
 import { Token } from '../entity/Token';
-import jwt from 'jsonwebtoken';
+import jwt, {JwtPayload} from 'jsonwebtoken';
 import { JWT_SECRET, LDAP_URLs } from '../config';
 import ldap from 'ldapjs';
 
@@ -43,7 +43,7 @@ export const login = async (req: Request, res: Response) => {
         let user = await userRepo.findOneBy({adName: username})
         let token = await tokenRepo.save(new Token({user: user}))
         let payload = {user: user.adName, accessToken: token.accessToken, refreshToken: token.refreshToken, expires: token.expire};
-        jwt.sign(payload, JWT_SECRET, (err, signedToken) => {
+        jwt.sign(payload, JWT_SECRET, (err, signedToken: string) => {
             if (err)
                 res.sendStatus(500)
             else
@@ -56,7 +56,7 @@ export const login = async (req: Request, res: Response) => {
 };
 
 // middleware function
-export const verifyToken = async (req: Request, res: Response, next) => {
+export const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
 
     if (req.url === "/auth/login") {
         next();
@@ -75,20 +75,20 @@ export const verifyToken = async (req: Request, res: Response, next) => {
         return;
     }
 
-    let payload;
+    let payload: jwt.JwtPayload;
     try {
-        payload = jwt.verify(jwtToken, JWT_SECRET);
+        payload = <JwtPayload>jwt.verify(jwtToken, JWT_SECRET);
     } catch (err) {
         console.log(`cannot verify JWT Token (${jwtToken})`);
         res.sendStatus(401);
         return;
     }
 
+    // untested
     tokenRepo.findOneByOrFail({ accessToken: payload.accessToken, user: { adName: payload.user }})
     .then((token) => {
-        userRepo.findOneByOrFail({ id: token.id, adName: payload.user })
-        .then(() => next())
-        .catch(() => res.sendStatus(401));
+        if (token.expire >= new Date().getTime()) next();
+        else res.sendStatus(401);
     })
     .catch(() => res.sendStatus(401))
 }
