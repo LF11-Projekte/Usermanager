@@ -17,7 +17,7 @@ export class User {
     description: string = ""
 
     @Column()
-    profilePicture: string = "/media/default.jpeg"
+    profilePicture: string = "/media/default.png"
 
     @Column()
     privileges: number = 0

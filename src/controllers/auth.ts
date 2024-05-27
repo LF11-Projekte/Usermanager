@@ -84,7 +84,7 @@ export const verifyToken = async (req: Request, res: Response, next: NextFunctio
         '/auth/escape',
     ];
 
-    if (URLS_WITHOUT_AUTH.includes(req.path)) {
+    if (URLS_WITHOUT_AUTH.includes(req.path) || req.path.startsWith('/media/')) {
         next();
         return;
     }
@@ -114,7 +114,7 @@ export const verifyToken = async (req: Request, res: Response, next: NextFunctio
     res.locals["user" ] = payload.user;
 
     // untested
-    tokenRepo.findOneByOrFail({ accessToken: payload.accessToken, user: { adName: payload.user }})
+    tokenRepo.findOneByOrFail({ accessToken: payload.accessToken})
     .then((token) => {
         if (token.expire >= new Date().getTime()) next();
         else res.sendStatus(401);

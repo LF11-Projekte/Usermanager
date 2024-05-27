@@ -8,6 +8,7 @@ import session from "express-session";
 
 import { AppDataSource } from "./data-source"
 import { verifyToken } from './controllers/auth';
+import fileUpload from "express-fileupload";
 
 AppDataSource.initialize().then(async () => {
     const app: Express = express();
@@ -36,6 +37,10 @@ AppDataSource.initialize().then(async () => {
     });
 
     app.use(verifyToken);
+
+    app.use(fileUpload({
+        limits: { fileSize: 50 * 1024 * 1024 },
+    }));
     
     /** Routes */
     app.use('/', routes);

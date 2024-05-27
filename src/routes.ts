@@ -6,5 +6,6 @@ const routes = express.Router();
 
 routes.use('/auth', authRouter);
 routes.use('/user', userRouter);
+routes.use('/media', express.static(__dirname + '/../media/'));
 
 export default routes;
