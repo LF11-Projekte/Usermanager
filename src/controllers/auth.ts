@@ -110,6 +110,9 @@ export const verifyToken = async (req: Request, res: Response, next: NextFunctio
         return;
     }
 
+    res.locals["token"] = payload.accessToken;
+    res.locals["user" ] = payload.user;
+
     // untested
     tokenRepo.findOneByOrFail({ accessToken: payload.accessToken, user: { adName: payload.user }})
     .then((token) => {
