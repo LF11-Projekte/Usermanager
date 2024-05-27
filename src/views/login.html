@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>SKA</title>
+</head>
+<body>
+	<nav class="shadow">
+		<h1>SKA</h1>
+		<p>Schulkonto-Authentifizierung</p>
+	</nav>
+	<main>
+		<div class="popup shadow">
+			<div class="header">
+				<p>
+					Anmeldung am <b>BSZET Dresden</b>
+				</p>
+			</div>
+			<div class="form">
+				<label>Anmeldename</label>
+				<input type="text" id="username">
+
+				<label>Kennwort</label>
+				<input type="password" id="password">
+
+				<div class="error hide" id="error-window"></div>
+
+				<button onclick="checkLogin()">Authentifizieren</button>
+			</div>
+			<form id="redirect" method="get"></form>
+		</div>
+	</main>
+</body>
+<script>
+	function checkLogin() {
+		// Redirect-URL muss hierfür gesetzt sein
+		if (!new URL(window.location).searchParams.get("r"))
+			return;
+
+		const redirect = new URL(window.location).searchParams.get("r");
+
+		fetch("/auth/login", {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				"username": document.getElementById("username").value,
+				"password": document.getElementById("password").value,
+			})
+		})
+		.catch(reason => {
+			// Netzwerkfehler -> Anzeigen
+			document.getElementById("error-window").innerHTML = "Der Authentifizierungs-Server ist derzeit nicht erreichbar";
+			document.getElementById("error-window").classList.remove("hide");
+		})
+		.then(value => {
+			if (!value.ok) {
+				// Zugangsdaten falsch -> Anzeigen
+				document.getElementById("error-window").innerHTML = "Die eingegebenen Zugangsdaten sind falsch";
+				document.getElementById("error-window").classList.remove("hide");
+			}
+			else
+			{
+				// Token via eines Redirects über das Backend zurückgeben
+				// (dies wird benötigt, um CORS zu umgehen)
+				// PS: CORS!! (grrrr) >:(
+				value.json().then(data => {
+					window.location.href = "/auth/escape?token=" + encodeURIComponent(data.token) + "&redirect=" + encodeURIComponent(redirect);
+				})
+			}
+		})
+	}
+</script>
+<style>
+	@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+
+	* {
+		box-sizing: border-box;
+	}
+
+	html, body {
+		margin: 0;
+		padding: 0;
+
+		height: 100%;
+		
+		background-color: #D9D9D9;
+		font-family: 'Inter', sans-serif;
+	}
+
+	body {
+		display: grid;
+		grid-template-rows: auto 1fr;
+	}
+
+	nav {
+		display: flex;
+		flex-direction: row;
+		
+		justify-content: space-between;
+		align-items: center;
+
+		padding: 1em;
+		background-color: #ffffff;
+	}
+
+	nav h1 {
+		margin: 0;
+
+		color: #0D466F;
+
+		font-size: 2em;
+		font-weight: 900;
+	}
+
+	nav p {
+		margin: 0;
+
+		font-size: 1.2em;
+		font-style: italic;
+		font-weight: 200;
+	}
+
+	main {
+		display: flex;
+		justify-content: center;
+		align-items: start;
+	}
+
+	.popup {
+		width: 35em;
+		margin-top: 2em;
+
+		background-color: #FFFFFF;
+	}
+
+	.popup .header {
+		padding: 1em;
+		color: white;
+		background-color: #0D466F;
+	}
+
+	.popup .header p {
+		margin: 0;
+		width: 100%;
+		text-align: center;
+	}
+
+	.popup .form {
+		display: flex;
+		flex-direction: column;
+
+		padding: 1.5em;
+		padding-top: 0.5em;
+	}
+
+	.popup .form label {
+		margin-top: 1em;
+	}
+
+	.popup .form input {
+		padding: 0.5em;
+
+		border: none;
+		outline: none;
+
+		background-color: #EEEEEE;
+	}
+
+	.popup .form button {
+		width: fit-content;
+
+		margin-top: 1.5em;
+		padding: 0.5em;
+
+		border: none;
+		outline: none;
+
+		cursor: pointer;
+
+		color: white;
+		background-color: #0D466F;
+	}
+
+	.shadow {
+		-webkit-box-shadow: 0px 1px 6px 3px rgba(0,0,0,0.15); 
+		box-shadow: 0px 1px 6px 3px rgba(0,0,0,0.15);
+	}
+
+	.error {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+
+		margin-top: 1em;
+		padding: 0.5em;
+
+		color: #ffffff;
+		background-color: #da4e4e;
+	}
+
+	.hide {
+		display: none;
+	}
+</style>
+</html>

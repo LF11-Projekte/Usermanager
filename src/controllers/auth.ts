@@ -1,10 +1,15 @@
+// ---------------------------------------------------------------------------------------------------------------------
 import { Request, Response, NextFunction } from 'express';
+import jwt, {JwtPayload} from 'jsonwebtoken';
+// ---------------------------------------------------------------------------------------------------------------------
+import ldap from 'ldapjs';
+import { JWT_SECRET, LDAP_URLs } from '../config';
+// ---------------------------------------------------------------------------------------------------------------------
 import { AppDataSource } from "../data-source";
 import { User } from '../entity/User';
 import { Token } from '../entity/Token';
-import jwt, {JwtPayload} from 'jsonwebtoken';
-import { JWT_SECRET, LDAP_URLs } from '../config';
-import ldap from 'ldapjs';
+import path from "node:path";
+// ---------------------------------------------------------------------------------------------------------------------
 
 const userRepo = AppDataSource.getRepository(User);
 const tokenRepo = AppDataSource.getRepository(Token);
@@ -22,7 +27,7 @@ export const login = async (req: Request, res: Response) => {
     }
 
     let success = await new Promise((resolve) => {
-        ldapClient.bind(`cn=${username},cn=Users,dc=ulfx,dc=local`, password, function(err) {
+        ldapClient.bind(`cn=${username},cn=Users,dc=ska,dc=local`, password, function(err) {
             resolve(err === null);
         });
     })
@@ -47,18 +52,39 @@ export const login = async (req: Request, res: Response) => {
             if (err)
                 res.sendStatus(500)
             else
-                if (redirect)
+                if (redirect) {
                     res.redirect(redirect + "?token=" + signedToken);
-                else
-                    res.send(signedToken);
+                }
+                else {
+                    res.send({
+                        "token": signedToken
+                    });
+                }
         })
     });
 };
 
-// middleware function
+export const loginForm = async (req: Request, res: Response) => {
+    res.sendFile("login.html", {root: path.join(__dirname, '../views')});
+};
+
+// CORS >:( (grrr)
+export const escape = async (req: Request, res: Response) => {
+    res.redirect(req.query.redirect + "?token=" + req.query.token);
+};
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Middleware-Authentikator
+// ---------------------------------------------------------------------------------------------------------------------
 export const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
 
-    if (req.url === "/auth/login") {
+    const URLS_WITHOUT_AUTH: string[] = [
+        '/auth/login',
+        '/auth/login-form',
+        '/auth/escape',
+    ];
+
+    if (URLS_WITHOUT_AUTH.includes(req.path)) {
         next();
         return;
     }
