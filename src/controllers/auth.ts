@@ -27,7 +27,7 @@ export const login = async (req: Request, res: Response) => {
     }
 
     let success = await new Promise((resolve) => {
-        ldapClient.bind(`cn=${username},cn=Users,dc=ska,dc=local`, password, function(err) {
+        ldapClient.bind(`cn=${username},cn=Users,dc=ulfx,dc=local`, password, function(err) {
             resolve(err === null);
         });
     })
@@ -72,6 +72,41 @@ export const loginForm = async (req: Request, res: Response) => {
 export const escape = async (req: Request, res: Response) => {
     res.redirect(req.query.redirect + "?token=" + req.query.token);
 };
+
+export const get_verify = async (req: Request, res: Response) => {
+
+    let token = req.headers.authorization;
+    if (!token) {
+        res.send({"success": "false"});
+        return;
+    }
+
+    let jwtToken = token.split(" ")[1];
+    if (!jwtToken) {
+        res.send({"success": "false"});
+        return;
+    }
+
+    let payload: jwt.JwtPayload;
+    try {
+        payload = <JwtPayload>jwt.verify(jwtToken, JWT_SECRET);
+    } catch (err) {
+        console.log(`cannot verify JWT Token (${jwtToken})`);
+        res.send({"success": "false"});
+        return;
+    }
+
+    res.locals["token"] = payload.accessToken;
+    res.locals["user" ] = payload.user;
+
+    // untested
+    tokenRepo.findOneByOrFail({ accessToken: payload.accessToken})
+        .then((token) => {
+            if (token.expire >= new Date().getTime()) res.send({"success": "true"});
+            else res.send({"success": "false"});
+        })
+        .catch(() => res.send({"success": "false"}))
+}
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Middleware-Authentikator
