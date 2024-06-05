@@ -13,9 +13,9 @@ import path from "node:path";
 
 const userRepo = AppDataSource.getRepository(User);
 const tokenRepo = AppDataSource.getRepository(Token);
-const ldapClient = ldap.createClient({url: LDAP_URLs});
-ldapClient.on("connect", () => console.log("connection to ldap established"));
-ldapClient.on("connectError", (err) => console.log(err));
+//const ldapClient = ldap.createClient({url: LDAP_URLs});
+//ldapClient.on("connect", () => console.log("connection to ldap established"));
+//ldapClient.on("connectError", (err) => console.log(err));
 
 export const login = async (req: Request, res: Response) => {
     
@@ -26,11 +26,13 @@ export const login = async (req: Request, res: Response) => {
         return;
     }
 
-    let success = await new Promise((resolve) => {
-        ldapClient.bind(`cn=${username},cn=Users,dc=ulfx,dc=local`, password, function(err) {
-            resolve(err === null);
-        });
-    })
+    //let success = await new Promise((resolve) => {
+    //    ldapClient.bind(`cn=${username},cn=Users,dc=ulfx,dc=local`, password, function(err) {
+    //        resolve(err === null);
+    //    });
+    //})
+
+    let success = true;
 
     if (!success) {
         res.sendStatus(400);
